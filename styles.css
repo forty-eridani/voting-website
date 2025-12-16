@@ -1,0 +1,90 @@
+@font-face {
+    font-family: minecraft;
+    src: url("MinecraftRegular.otf") format('opentype');
+}
+
+h2, h4, a {
+    font-family: minecraft;
+    color: white;
+}
+
+a {
+    font-size: 30px;
+    text-decoration: none;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.navbar {
+    width: 100%;
+    height: 70px;
+    background-color: slategray;
+
+    position: fixed;
+
+    display: flex;
+    flex-direction: row;
+}
+
+.nav-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.nav-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: right;
+}
+
+.home {
+    padding-left: 15px;
+}
+
+.create {
+    padding-right: 15px;
+}
+
+.vote-object {
+    margin-top: 150px;
+    width: 70%;
+    height: 150px;
+    background: slateblue;
+
+    display: flex;
+}
+
+.vote-text-side {
+    flex: 5;
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.vote-button-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+}
+
+.vote-button {
+    width: 80%;
+    font-size: 40px;
+    font-family: minecraft;
+    padding-right: 15px;
+}
+
+.form {
+    margin-top: 150px;
+    font-family: minecraft;
+}
