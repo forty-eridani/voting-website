@@ -22,8 +22,10 @@
     <script>
       let body = document.querySelector("#container");
 
+      console.log(document.cookie);
+
       window.addEventListener("load", (ev) => {
-        fetch("http://localhost:8080/submissions", {
+        fetch("http://192.168.0.24:8080/submissions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -36,69 +38,95 @@
             console.log(data);
 
             data.forEach((element, index) => {
-              let voteObject = document.createElement("div")
-              voteObject.classList.add("vote-object")
+              let voteObject = document.createElement("div");
+              voteObject.classList.add("vote-object");
 
-              let voteObjectTextSide = document.createElement("div")
-              voteObject.appendChild(voteObjectTextSide)
-              voteObjectTextSide.classList.add("vote-text-side")
+              let voteObjectTextSide = document.createElement("div");
+              voteObject.appendChild(voteObjectTextSide);
+              voteObjectTextSide.classList.add("vote-text-side");
 
-              let motdContainer = document.createElement("h2")
-              voteObjectTextSide.appendChild(motdContainer)
-              const motdText = document.createTextNode(element.motd)
-              motdContainer.appendChild(motdText)
+              let motdContainer = document.createElement("h2");
+              voteObjectTextSide.appendChild(motdContainer);
+              const motdText = document.createTextNode(element.motd);
+              motdContainer.appendChild(motdText);
 
-              let voteButtonSide = document.createElement("div")
-              voteObject.appendChild(voteButtonSide)
-              voteButtonSide.classList.add("vote-button-side")
+              let voteButtonSide = document.createElement("div");
+              voteObject.appendChild(voteButtonSide);
+              voteButtonSide.classList.add("vote-button-side");
 
-              let voteButton = document.createElement("button")
-              voteButton.id = `vote${index}`
-              voteButton.classList.add("vote-button")
-              voteButtonSide.appendChild(voteButton)
+              let voteButton = document.createElement("button");
+              voteButton.id = `vote${index}`;
+              voteButton.classList.add("vote-button");
+              voteButtonSide.appendChild(voteButton);
 
-              let buttonText = document.createTextNode("Vote")
-              voteButton.appendChild(buttonText)
+              let buttonText = document.createTextNode("Vote");
+              voteButton.appendChild(buttonText);
 
-              let voteCountContainer = document.createElement("h4")
-              voteCountContainer.id = `voteCount${index}`
-              voteButtonSide.appendChild(voteCountContainer)
+              let voteCountContainer = document.createElement("h4");
+              voteCountContainer.id = `voteCount${index}`;
+              voteButtonSide.appendChild(voteCountContainer);
 
-              let voteCountText = document.createTextNode(`Vote count: ${element.votes}`)
-              voteCountContainer.appendChild(voteCountText)
+              let voteCountText = document.createTextNode(
+                `Vote count: ${element.votes}`
+              );
+              voteCountContainer.appendChild(voteCountText);
 
-              document.getElementById("container").appendChild(voteObject)
-              
-            //   body.innerHTML += `    
-            // <div class="vote-object">
-            //   <div class="vote-text-side">
-            //     <h2>${element.motd}</h2>
-            //   </div>
-            //   <div class="vote-button-side">
-            //     <button class="vote-button" id="vote${index}">Vote</button>
-            //     <h4 id="voteCount${index}">Vote count: ${element.votes}</h4>
-            //   </div>
-            // </div>`;
+              document.getElementById("container").appendChild(voteObject);
+
+              //   body.innerHTML += `
+              // <div class="vote-object">
+              //   <div class="vote-text-side">
+              //     <h2>${element.motd}</h2>
+              //   </div>
+              //   <div class="vote-button-side">
+              //     <button class="vote-button" id="vote${index}">Vote</button>
+              //     <h4 id="voteCount${index}">Vote count: ${element.votes}</h4>
+              //   </div>
+              // </div>`;
 
               voteButton.addEventListener("click", () => {
-                console.log("Test")
-                fetch("http://localhost:8080/vote", {
+                console.log("Test");
+
+                let date = new Date();
+
+                if (!document.cookie.includes("hasVoted")) {
+                  let midnight = new Date();
+                  midnight.setHours(23, 59, 59, 999);
+
+                  let timeUntilMidnight =
+                    (midnight.getTime() - date.getTime()) / 1000;
+                  console.log(
+                    "Time until midnight (in seconds)",
+                    timeUntilMidnight
+                  );
+                  document.cookie = `hasVoted=true; max-age=${Math.floor(
+                    timeUntilMidnight
+                  ).toString()}`;
+                } else {
+                  alert(
+                    "Nice try you tricky sigma, but you can't vote twice in a day"
+                  );
+                  return;
+                }
+
+                fetch("http://192.168.0.24:8080/vote", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                    voteIndex: index
+                    voteIndex: index,
+                  }),
+                })
+                  .then((res) => {
+                    return res.json();
                   })
-                }).then(res => {
-                  return res.json()
-                }).then(data => {
-                  voteCountText.data = "Vote count: " + data.votes
-                  console.log(data.votes)
-                });
+                  .then((data) => {
+                    voteCountText.data = "Vote count: " + data.votes;
+                  });
               });
             });
-          })
+          });
       });
     </script>
   </body>

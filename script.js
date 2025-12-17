@@ -1,61 +1,55 @@
-let form = document.querySelector("#form")
+let form = document.querySelector("#form");
 
 form.addEventListener("submit", (e) => {
-    e.preventDefault()
-})
+  e.preventDefault();
+});
 
-function parseCookie(str) {
-    if (str.length == 0)
-        return
+let hasSubmitted = false;
 
-    let pairs = str.split(';')
-    let splittedPairs = pairs.map(cookie => cookie.split('='))
-
-    let object = {}
-
-    splittedPairs.forEach(element => {
-        object[element[0].trim()] = element[1].trim()
-    });
-
-    return object
-}
-
-const send = document.querySelector("#submitButton")
+const send = document.querySelector("#submitButton");
 send.addEventListener("click", async () => {
-    console.log(document.cookie)
-    const userInfo = document.querySelector("#form")
-    const motd = new FormData(userInfo).get("motd")
+  if (document.cookie.includes("hasSubmitted") || hasSubmitted) {
+    alert("nice try you tricky sigma, but you already submitted today!!!111");
+    return;
+  }
 
-    cookies = parseCookie(document.cookie)
+  const userInfo = document.querySelector("#form");
+  const motd = new FormData(userInfo).get("motd");
 
-    let date = new Date()
+  fetch("http://192.168.0.24:8080/submit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
 
-    // if (cookies.time != undefined && date.getTime() - Number(cookies.time) < 86400000) {
-    //     alert("You cannot submit multiple motds in a single day you tricky sigma")
-    //     return
-    // }
-
-    let isTaken = false;
-
-    fetch("http://localhost:8080/submit", {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-
-        body: JSON.stringify({
-            "MOTD": motd
-        })
-    }).then(res => {
-        return res.json()
-    }).then(data => {
-        if (data.oops == 69) {
-            alert("YOU ARE STUPID THAT's ALREADY TAKEN")
-            isTaken = true;
-            return
-        }
+    body: JSON.stringify({
+      MOTD: motd,
+    }),
+  })
+    .then((res) => {
+      return res.json();
     })
+    .then((data) => {
+      if (data.oops == 69) {
+        alert("YOU ARE STUPID THAT's ALREADY TAKEN");
+        return true;
+      }
 
-    if (!isTaken)
-        document.cookie = `time=${date.getTime()}`
-})
+      hasSubmitted = true;
+      return false;
+    })
+    .then(isTaken => {
+      if (!isTaken) {
+        let date = new Date();
+        let midnight = new Date();
+        midnight.setHours(23, 59, 59, 999);
+
+        let timeUntilMidnight = (midnight.getTime() - date.getTime()) / 1000;
+
+        console.log(timeUntilMidnight);
+        document.cookie = `hasSubmitted=true; max-age=${Math.floor(
+          timeUntilMidnight
+        ).toString()}`;
+      }
+    });
+});
