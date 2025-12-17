@@ -27,7 +27,6 @@ send.addEventListener("click", async () => {
     const motd = new FormData(userInfo).get("motd")
 
     cookies = parseCookie(document.cookie)
-    console.log(cookies.time)
 
     let date = new Date()
 
@@ -55,8 +54,6 @@ send.addEventListener("click", async () => {
             isTaken = true;
             return
         }
-
-        console.log(data)
     })
 
     if (!isTaken)

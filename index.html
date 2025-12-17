@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/styles.css" />
     <title>Vote</title>
   </head>
-  <body>
+  <body id="body">
     <div class="navbar">
       <div class="nav-left">
         <a class="home" href="/">Home</a>
@@ -17,14 +17,89 @@
       </div>
     </div>
 
-    <div class="vote-object">
-      <div class="vote-text-side">
-        <h2>monster tastes like ass</h2>
-      </div>
-      <div class="vote-button-side">
-        <button class="vote-button">Vote</button>
-        <h4>Vote count: 6</h4>
-      </div>
-    </div>
+    <div class="vote-item-container" id="container"></div>
+
+    <script>
+      let body = document.querySelector("#container");
+
+      window.addEventListener("load", (ev) => {
+        fetch("http://localhost:8080/submissions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((res) => {
+            return res.json();
+          })
+          .then((data) => {
+            console.log(data);
+
+            data.forEach((element, index) => {
+              let voteObject = document.createElement("div")
+              voteObject.classList.add("vote-object")
+
+              let voteObjectTextSide = document.createElement("div")
+              voteObject.appendChild(voteObjectTextSide)
+              voteObjectTextSide.classList.add("vote-text-side")
+
+              let motdContainer = document.createElement("h2")
+              voteObjectTextSide.appendChild(motdContainer)
+              const motdText = document.createTextNode(element.motd)
+              motdContainer.appendChild(motdText)
+
+              let voteButtonSide = document.createElement("div")
+              voteObject.appendChild(voteButtonSide)
+              voteButtonSide.classList.add("vote-button-side")
+
+              let voteButton = document.createElement("button")
+              voteButton.id = `vote${index}`
+              voteButton.classList.add("vote-button")
+              voteButtonSide.appendChild(voteButton)
+
+              let buttonText = document.createTextNode("Vote")
+              voteButton.appendChild(buttonText)
+
+              let voteCountContainer = document.createElement("h4")
+              voteCountContainer.id = `voteCount${index}`
+              voteButtonSide.appendChild(voteCountContainer)
+
+              let voteCountText = document.createTextNode(`Vote count: ${element.votes}`)
+              voteCountContainer.appendChild(voteCountText)
+
+              document.getElementById("container").appendChild(voteObject)
+              
+            //   body.innerHTML += `    
+            // <div class="vote-object">
+            //   <div class="vote-text-side">
+            //     <h2>${element.motd}</h2>
+            //   </div>
+            //   <div class="vote-button-side">
+            //     <button class="vote-button" id="vote${index}">Vote</button>
+            //     <h4 id="voteCount${index}">Vote count: ${element.votes}</h4>
+            //   </div>
+            // </div>`;
+
+              voteButton.addEventListener("click", () => {
+                console.log("Test")
+                fetch("http://localhost:8080/vote", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    voteIndex: index
+                  })
+                }).then(res => {
+                  return res.json()
+                }).then(data => {
+                  voteCountText.data = "Vote count: " + data.votes
+                  console.log(data.votes)
+                });
+              });
+            });
+          })
+      });
+    </script>
   </body>
 </html>

@@ -31,7 +31,7 @@ function merge(l, r) {
 
     while (lIndex < l.length && rIndex < r.length) {
         if (l[lIndex].votes < r[rIndex].votes)
-            final.push(l[lindex++])
+            final.push(l[lIndex++])
         else
             final.push(r[rIndex++])
     }
@@ -91,6 +91,25 @@ app.post('/submit', (req, res) => {
     res.send(JSON.stringify(submissions))
 })
 
-app.post('/submissions', (req, res) => {
-    
+app.post('/submissions', (_, res) => {
+    submissions = sortSubmissions(submissions)
+    console.log(submissions)
+    res.send(JSON.stringify(submissions))
+})
+
+app.post("/vote", (req, res) => {
+    let index = req.body.voteIndex
+
+    submissions[index].votes += 1
+
+    res.send(JSON.stringify({votes: submissions[index].votes}))
+})
+
+app.post("/reset", (req, res) => {
+    if (req.body.sigma === "no you stinker") {
+        res.send("QUIT BEING SUCH A STINKER")
+        return
+    }
+
+    submissions = []
 })

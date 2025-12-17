@@ -16,7 +16,9 @@ a {
 body {
     margin: 0;
     display: flex;
-    justify-content: center;
+
+    flex-direction: column;
+    align-items: center;
 }
 
 .navbar {
@@ -75,10 +77,12 @@ body {
 
     justify-content: center;
     align-items: center;
+
+    padding-right: 20px;
 }
 
 .vote-button {
-    width: 80%;
+    width: 100%;
     font-size: 40px;
     font-family: minecraft;
     padding-right: 15px;
@@ -87,4 +91,12 @@ body {
 .form {
     margin-top: 150px;
     font-family: minecraft;
+}
+
+.vote-item-container {
+    padding: 80px;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
