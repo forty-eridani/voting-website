@@ -30,7 +30,7 @@ function merge(l, r) {
     let final = []
 
     while (lIndex < l.length && rIndex < r.length) {
-        if (l[lIndex].votes < r[rIndex].votes)
+        if (l[lIndex].votes > r[rIndex].votes)
             final.push(l[lIndex++])
         else
             final.push(r[rIndex++])
@@ -48,8 +48,8 @@ function sortSubmissions(submissions) {
 
     let mid = Math.floor(submissions.length / 2)
 
-    left = submissions.toSpliced(0, mid)
-    right = submissions.toSpliced(mid, submissions.length)
+    left = submissions.slice(0, mid)
+    right = submissions.slice(mid)
 
     left = sortSubmissions(left)
     right = sortSubmissions(right)
@@ -110,6 +110,13 @@ app.post("/reset", (req, res) => {
         res.send("QUIT BEING SUCH A STINKER")
         return
     }
+
+    if (submissions.length == 0) {
+        res.send(JSON.stringify({motd: "", votes: -1}))
+        return
+    }
+
+    res.send(JSON.stringify(submissions[0]))
 
     submissions = []
 })
