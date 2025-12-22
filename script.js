@@ -16,7 +16,7 @@ send.addEventListener("click", async () => {
   const userInfo = document.querySelector("#form");
   const motd = new FormData(userInfo).get("motd");
 
-  fetch("http://192.168.0.24:8080/submit", {
+  fetch("/submit", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -30,6 +30,7 @@ send.addEventListener("click", async () => {
       return res.json();
     })
     .then((data) => {
+      console.log(data)
       if (data.oops == 69) {
         alert("YOU ARE STUPID THAT's ALREADY TAKEN");
         return true;
@@ -38,7 +39,7 @@ send.addEventListener("click", async () => {
       hasSubmitted = true;
       return false;
     })
-    .then(isTaken => {
+    .then((isTaken) => {
       if (!isTaken) {
         let date = new Date();
         let midnight = new Date();

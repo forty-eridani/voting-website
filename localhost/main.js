@@ -1,122 +1,34 @@
-const express = require("express")
+const express = require('express')
 const app = express()
-const path = require("path")
+
+app.use(express.json())
 
 const port = 8080
 
-app.use(express.static(path.join(__dirname, '../public',)))
-app.use(express.json())
-
-app.listen(port, function() {
-    console.log(`Listening on port ${port}`)
+app.listen(port, () => {
+    console.log(`App listening on port ${port}`)
 })
 
-app.get("/", function(req, res) {
-    res.sendFile(path.join(__dirname, "../index.html"))
+app.get("/", (req, res) => {
+
 })
 
-app.get("/:path", function(req, res) {
-    p = path.join(__dirname, "../" + req.params.path)
-    console.log(p)
-    res.sendFile(p)
+app.get("/create", (req, res) => {
+
 })
 
-let submissions = []
+app.get("/submissions", (req, res) => {
 
-function merge(l, r) {
-    let lIndex = 0;
-    let rIndex = 0;
-
-    let final = []
-
-    while (lIndex < l.length && rIndex < r.length) {
-        if (l[lIndex].votes > r[rIndex].votes)
-            final.push(l[lIndex++])
-        else
-            final.push(r[rIndex++])
-    }
-
-    final = final.concat(l.slice(lIndex, l.length))
-    final = final.concat(r.slice(rIndex, r.length))
-
-    return final
-}
-
-function sortSubmissions(submissions) {
-    if (submissions.length <= 1)
-        return submissions
-
-    let mid = Math.floor(submissions.length / 2)
-
-    left = submissions.slice(0, mid)
-    right = submissions.slice(mid)
-
-    left = sortSubmissions(left)
-    right = sortSubmissions(right)
-
-    submissions = merge(left, right)
-
-    return submissions
-}
-
-function motdExists(motd) {
-    let doesExist = false;
-
-    submissions.forEach((submission) => {
-        if (motd == submission.motd)
-            doesExist = true
-    })
-
-    return doesExist
-}
-
-app.post('/submit', (req, res) => {
-    if (motdExists(req.body.MOTD)) {
-        res.send(JSON.stringify({
-            oops: 69
-        }))
-
-        return
-    }
-
-    submissions.push({
-        motd: req.body.MOTD,
-        votes: 0
-    })
-    
-    // console.log(submissions)
-
-    console.log(sortSubmissions(submissions))
-
-    res.send(JSON.stringify(submissions))
 })
 
-app.post('/submissions', (_, res) => {
-    submissions = sortSubmissions(submissions)
-    console.log(submissions)
-    res.send(JSON.stringify(submissions))
+app.post("/submit", (req, res) => {
+
 })
 
 app.post("/vote", (req, res) => {
-    let index = req.body.voteIndex
 
-    submissions[index].votes += 1
-
-    res.send(JSON.stringify({votes: submissions[index].votes}))
 })
 
 app.post("/reset", (req, res) => {
-    if (req.body.sigma === "no you stinker") {
-        res.send("QUIT BEING SUCH A STINKER")
-        return
-    }
 
-    if (submissions.length == 0) {
-        res.send(JSON.stringify({motd: "", votes: -1}))
-        return
-    }
-
-    res.send(JSON.stringify(submissions[0]))
-
-    submissions = []
 })
