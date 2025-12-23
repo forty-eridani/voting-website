@@ -6,23 +6,25 @@ import path from "path";
 import cookieParser from "cookie-parser";
 const app = express();
 
-const db = new DatabaseSync(path.join(import.meta.dirname, "../logins.db"));
+const db = new DatabaseSync(path.join(import.meta.dirname, "../data.db"));
 
 // The password is hashed
 db.exec(`
     CREATE TABLE IF NOT EXISTS logins (
         username VARCHAR PRIMARY KEY NOT NULL,
         password VARCHAR NOT NULL,
-        activated BOOLEAN NOT NULL DEFAULT 0
+        activated BOOLEAN NOT NULL DEFAULT 0,
+        hasVoted BOOLEAN NOT NULL DEFAULT 0
     )    
 `);
 
 db.exec(`
     CREATE TABLE IF NOT EXISTS motds (
-        message VARCHAR NOT NULL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message VARCHAR NOT NULL,
         author VARCHAR NOT NULL,
         votes INTEGER NOT NULL
-    )    
+      )    
 `);
 
 let sessionTokens = {};
@@ -57,7 +59,7 @@ app.get("/submissions", (req, res) => {
 
   const motds = getSubmissions.all();
 
-  res.send(JSON.stringify(motds));
+  res.send(JSON.stringify(sortSubmissions(motds)));
 });
 
 app.get("/public/:path", (req, res) => {
@@ -207,13 +209,21 @@ app.post("/submit", (req, res) => {
   const sessionID = req.cookies["sessionID"];
 
   const getMOTDs = db.prepare("SELECT * FROM motds");
+  const getMOTDsFromMessage = db.prepare(
+    "SELECT * FROM motds WHERE message = ?"
+  );
+
+  const getMOTDsFromUser = db.prepare("SELECT * FROM motds WHERE author = ?");
+
   const insertMOTD = db.prepare(
     `INSERT INTO motds (message, author, votes) VALUES(?, ?, ?)`
   );
 
-  const motds = getMOTDs.get();
+  const motds = getMOTDs.all();
+  const copyMOTDs = getMOTDsFromMessage.all(motd);
 
-  if (motds != undefined && motds[motd] != undefined) {
+  console.log(JSON.stringify(motds) + " are the motds");
+  if (copyMOTDs.length != 0) {
     res.send(
       JSON.stringify({
         isTaken: true,
@@ -223,16 +233,88 @@ app.post("/submit", (req, res) => {
     return;
   }
 
+  if (sessionTokens[sessionID] == undefined) {
+    res.send(
+      JSON.stringify({
+        loggedOut: true,
+      })
+    );
+
+    return;
+  }
+
+  const motdsFromUser = getMOTDsFromUser.all(sessionTokens[sessionID]);
+  if (motdsFromUser.length != 0) {
+    res.send(
+      JSON.stringify({
+        hasSubmitted: true,
+      })
+    );
+
+    return;
+  }
+
+  console.log(sessionTokens[sessionID]);
   insertMOTD.run(motd, sessionTokens[sessionID], 0);
 });
 
+const getVotes = db.prepare("SELECT votes FROM motds WHERE id = ?");
+const updateVotes = db.prepare("UPDATE motds SET votes = ? WHERE id = ?");
+
+const hasVotedMethod = db.prepare(
+  "SELECT hasVoted FROM logins WHERE username = ?"
+);
+const setHasVoted = db.prepare(
+  "UPDATE logins SET hasVoted = 1 WHERE username = ?"
+);
+
 app.post("/vote", (req, res) => {
-  const voteIndex = req.body.voteIndex;
+  const id = req.body.voteID;
+  const sessionID = req.cookies.sessionID;
 
-  const getSubmissions = db.prepare(`SELECT * FROM motds`);
-  const motds = getSubmissions.all();
+  if (sessionID == undefined) {
+    res.send(
+      JSON.stringify({
+        signedOut: true,
+      })
+    );
 
-  const message = motds[voteIndex];
+    return;
+  }
+
+  if (sessionTokens[sessionID] == undefined) {
+    res.send(
+      JSON.stringify({
+        expired: true,
+      })
+    );
+
+    return;
+  }
+
+  const hasVoted = hasVotedMethod.get(sessionTokens[sessionID]).hasVoted;
+
+  if (hasVoted == 1) {
+    res.send(
+      JSON.stringify({
+        hasVoted: true,
+      })
+    );
+
+    return;
+  }
+
+  const votes = getVotes.get(id).votes;
+  console.log(votes);
+  updateVotes.run(votes + 1, id);
+
+  setHasVoted.run(sessionTokens[sessionID]);
+
+  res.send(
+    JSON.stringify({
+      votes: votes + 1,
+    })
+  );
 });
 
 app.post("/reset", (req, res) => {});

@@ -37,7 +37,7 @@
           .then((data) => {
             console.log(data);
 
-            data.forEach((element, index) => {
+            data.forEach((element) => {
               let voteObject = document.createElement("div");
               voteObject.classList.add("vote-object");
 
@@ -55,7 +55,7 @@
               voteButtonSide.classList.add("vote-button-side");
 
               let voteButton = document.createElement("button");
-              voteButton.id = `vote${index}`;
+              voteButton.id = `vote${element.id}`;
               voteButton.classList.add("vote-button");
               voteButtonSide.appendChild(voteButton);
 
@@ -63,7 +63,7 @@
               voteButton.appendChild(buttonText);
 
               let voteCountContainer = document.createElement("h4");
-              voteCountContainer.id = `voteCount${index}`;
+              voteCountContainer.id = `voteCount${element.id}`;
               voteButtonSide.appendChild(voteCountContainer);
 
               let voteCountText = document.createTextNode(
@@ -88,40 +88,37 @@
                 console.log("Test");
 
                 let date = new Date();
-
-                // if (!document.cookie.includes("hasVoted")) {
-                //   let midnight = new Date();
-                //   midnight.setHours(23, 59, 59, 999);
-
-                //   let timeUntilMidnight =
-                //     (midnight.getTime() - date.getTime()) / 1000;
-                //   console.log(
-                //     "Time until midnight (in seconds)",
-                //     timeUntilMidnight
-                //   );
-                //   document.cookie = `hasVoted=true; max-age=${Math.floor(
-                //     timeUntilMidnight
-                //   ).toString()}`;
-                // } else {
-                //   alert(
-                //     "Nice try you tricky sigma, but you can't vote twice in a day"
-                //   );
-                //   return;
-                // }
-
                 fetch("/vote", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                    voteIndex: index,
+                    voteID: element.id,
                   }),
                 })
                   .then((res) => {
                     return res.json();
                   })
                   .then((data) => {
+                    if (data.hasVoted) {
+                      alert(
+                        "Nice try you tricky sigma, but you can't vote twice in one day!!!1!"
+                      );
+                      return;
+                    }
+
+                    if (data.signedOut) {
+                      alert("You must be signed in to vote.");
+                      return;
+                    }
+
+                    if (data.expired) {
+                      alert(
+                        "It looks like your session token has expired. Please sign in again."
+                      );
+                      return;
+                    }
                     voteCountText.data = "Vote count: " + data.votes;
                   });
               });

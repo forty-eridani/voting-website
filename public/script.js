@@ -11,12 +11,7 @@ window.addEventListener("load", (event) => {
 });
 
 const send = document.querySelector("#submitButton");
-send.addEventListener("click", async () => {
-  if (document.cookie.includes("hasSubmitted") || hasSubmitted) {
-    alert("nice try you tricky sigma, but you already submitted today!!!111");
-    return;
-  }
-
+send.addEventListener("click", () => {
   const userInfo = document.querySelector("#form");
   const motd = new FormData(userInfo).get("motd");
 
@@ -38,24 +33,12 @@ send.addEventListener("click", async () => {
       if (data.isTaken) {
         alert("YOU ARE STUPID THAT's ALREADY TAKEN");
         return true;
+      } else if (data.loggedOut) {
+        alert("You gotta sign in before you create a message pookie.");
+        return;
+      } else if (data.hasSubmitted) {
+        alert("Hey there, you can only submit one votable thing per day");
+        return;
       }
-
-      hasSubmitted = true;
-      return false;
     });
-  //   .then((isTaken) => {
-  //     if (!isTaken) {
-  //       let date = new Date();
-  //       let midnight = new Date();
-  //       midnight.setHours(23, 59, 59, 999);
-
-  //       let timeUntilMidnight = (midnight.getTime() - date.getTime()) / 1000;
-
-  //       console.log(timeUntilMidnight);
-  //       document.cookie = `hasSubmitted=true; max-age=${Math.floor(
-  //         timeUntilMidnight
-  //       ).toString()}`;
-  //     }
-  //   }
-  // );
 });
