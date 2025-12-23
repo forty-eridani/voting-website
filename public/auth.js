@@ -36,5 +36,7 @@ signInButton.addEventListener("click", () => {
         alert(data.status);
         return;
       }
+
+      window.location.replace("/");
     });
 });

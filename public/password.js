@@ -34,6 +34,6 @@ createAccountButton.addEventListener("click", (event) => {
         return;
       }
 
-      console.log(data);
+      window.location.replace("/auth");
     });
 });

@@ -71,6 +71,16 @@ app.get("/favicon.ico", (req, res) => {
   res.send(path.join(import.meta.dirname, `../public/favicon.ico`));
 });
 
+app.get("/login-state", (req, res) => {
+  const browserSessionID = req.cookies["sessionID"];
+
+  res.send(
+    JSON.stringify({
+      login: sessionTokens[browserSessionID] != undefined,
+    })
+  );
+});
+
 app.post("/login", (req, res) => {
   const username = req.body.username;
   const password = req.body.password;

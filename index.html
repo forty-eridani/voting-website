@@ -13,6 +13,8 @@
       </div>
 
       <div class="nav-right">
+        <a href="/auth" class="login-state">Sign In</a>
+        <a href="/password" class="login-state">Create Account</a>
         <a class="create" href="/create">Create MOTD</a>
       </div>
     </div>
@@ -21,8 +23,6 @@
 
     <script>
       let body = document.querySelector("#container");
-
-      console.log(document.cookie);
 
       window.addEventListener("load", (ev) => {
         fetch("/submissions", {
@@ -35,8 +35,6 @@
             return res.json();
           })
           .then((data) => {
-            console.log(data);
-
             data.forEach((element) => {
               let voteObject = document.createElement("div");
               voteObject.classList.add("vote-object");
@@ -126,5 +124,7 @@
           });
       });
     </script>
+
+    <script src="/public/navbar.js"></script>
   </body>
 </html>

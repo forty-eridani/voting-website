@@ -29,7 +29,6 @@ send.addEventListener("click", () => {
       return res.json();
     })
     .then((data) => {
-      console.log(data);
       if (data.isTaken) {
         alert("YOU ARE STUPID THAT's ALREADY TAKEN");
         return true;
