@@ -3,19 +3,8 @@ import { DatabaseSync } from "node:sqlite";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import path from "path";
+import cookieParser from "cookie-parser";
 const app = express();
-
-bcrypt
-  .hash("password", 5)
-  .then((hash) => {
-    console.log("Hash of password is", hash);
-    return hash;
-  })
-  .then((hash) => {
-    bcrypt.compare("password", hash, (error, result) => {
-      console.log(result);
-    });
-  });
 
 const db = new DatabaseSync(path.join(import.meta.dirname, "../logins.db"));
 
@@ -28,9 +17,18 @@ db.exec(`
     )    
 `);
 
-let sessionTokens = [];
+db.exec(`
+    CREATE TABLE IF NOT EXISTS motds (
+        message VARCHAR NOT NULL PRIMARY KEY,
+        author VARCHAR NOT NULL,
+        votes INTEGER NOT NULL
+    )    
+`);
+
+let sessionTokens = {};
 
 app.use(express.json());
+app.use(cookieParser());
 
 const port = 8080;
 
@@ -54,7 +52,13 @@ app.get("/create", (req, res) => {
   res.sendFile(path.join(import.meta.dirname, `../create.html`));
 });
 
-app.get("/submissions", (req, res) => {});
+app.get("/submissions", (req, res) => {
+  const getSubmissions = db.prepare(`SELECT * FROM motds`);
+
+  const motds = getSubmissions.all();
+
+  res.send(JSON.stringify(motds));
+});
 
 app.get("/public/:path", (req, res) => {
   console.log(req.params.path);
@@ -110,13 +114,20 @@ app.post("/login", (req, res) => {
 
         bcrypt.compare(password, passwordHash).then((correctPassword) => {
           if (correctPassword === true) {
+            const uuid = crypto.randomUUID();
+
+            res.cookie("sessionID", uuid, {
+              httpOnly: true,
+              maxAge: 3600000,
+            });
             res.send(
               JSON.stringify({
                 status: `Success`,
                 code: 1,
-                token: crypto.randomUUID(),
               })
             );
+
+            sessionTokens[uuid] = username;
           } else {
             res.send(
               JSON.stringify({
@@ -175,8 +186,53 @@ app.post("/create-account", (req, res) => {
     });
 });
 
-app.post("/submit", (req, res) => {});
+function sortSubmissions(subs) {
+  let cpy = [...subs];
 
-app.post("/vote", (req, res) => {});
+  cpy.sort((a, b) => {
+    if (a.votes < b.votes) {
+      return 1;
+    } else if (a.votes > b.votes) {
+      return -1;
+    } else {
+      return 0;
+    }
+  });
+
+  return cpy;
+}
+
+app.post("/submit", (req, res) => {
+  const motd = req.body.MOTD;
+  const sessionID = req.cookies["sessionID"];
+
+  const getMOTDs = db.prepare("SELECT * FROM motds");
+  const insertMOTD = db.prepare(
+    `INSERT INTO motds (message, author, votes) VALUES(?, ?, ?)`
+  );
+
+  const motds = getMOTDs.get();
+
+  if (motds != undefined && motds[motd] != undefined) {
+    res.send(
+      JSON.stringify({
+        isTaken: true,
+      })
+    );
+
+    return;
+  }
+
+  insertMOTD.run(motd, sessionTokens[sessionID], 0);
+});
+
+app.post("/vote", (req, res) => {
+  const voteIndex = req.body.voteIndex;
+
+  const getSubmissions = db.prepare(`SELECT * FROM motds`);
+  const motds = getSubmissions.all();
+
+  const message = motds[voteIndex];
+});
 
 app.post("/reset", (req, res) => {});

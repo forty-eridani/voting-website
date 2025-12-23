@@ -1,3 +1,5 @@
+function parseCookies(cookies) {}
+
 let signInButton = document.getElementById("submit");
 
 signInButton.addEventListener("click", () => {
@@ -34,7 +36,5 @@ signInButton.addEventListener("click", () => {
         alert(data.status);
         return;
       }
-
-      document.cookie = `session-id=${data.token}; Secure;`;
     });
 });

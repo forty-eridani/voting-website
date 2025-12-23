@@ -26,7 +26,7 @@
 
       window.addEventListener("load", (ev) => {
         fetch("/submissions", {
-          method: "POST",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
@@ -47,7 +47,7 @@
 
               let motdContainer = document.createElement("h2");
               voteObjectTextSide.appendChild(motdContainer);
-              const motdText = document.createTextNode(element.motd);
+              const motdText = document.createTextNode(element.message);
               motdContainer.appendChild(motdText);
 
               let voteButtonSide = document.createElement("div");
@@ -76,7 +76,7 @@
               //   body.innerHTML += `
               // <div class="vote-object">
               //   <div class="vote-text-side">
-              //     <h2>${element.motd}</h2>
+              //     <h2>${element.message}</h2>
               //   </div>
               //   <div class="vote-button-side">
               //     <button class="vote-button" id="vote${index}">Vote</button>
@@ -89,25 +89,25 @@
 
                 let date = new Date();
 
-                if (!document.cookie.includes("hasVoted")) {
-                  let midnight = new Date();
-                  midnight.setHours(23, 59, 59, 999);
+                // if (!document.cookie.includes("hasVoted")) {
+                //   let midnight = new Date();
+                //   midnight.setHours(23, 59, 59, 999);
 
-                  let timeUntilMidnight =
-                    (midnight.getTime() - date.getTime()) / 1000;
-                  console.log(
-                    "Time until midnight (in seconds)",
-                    timeUntilMidnight
-                  );
-                  document.cookie = `hasVoted=true; max-age=${Math.floor(
-                    timeUntilMidnight
-                  ).toString()}`;
-                } else {
-                  alert(
-                    "Nice try you tricky sigma, but you can't vote twice in a day"
-                  );
-                  return;
-                }
+                //   let timeUntilMidnight =
+                //     (midnight.getTime() - date.getTime()) / 1000;
+                //   console.log(
+                //     "Time until midnight (in seconds)",
+                //     timeUntilMidnight
+                //   );
+                //   document.cookie = `hasVoted=true; max-age=${Math.floor(
+                //     timeUntilMidnight
+                //   ).toString()}`;
+                // } else {
+                //   alert(
+                //     "Nice try you tricky sigma, but you can't vote twice in a day"
+                //   );
+                //   return;
+                // }
 
                 fetch("/vote", {
                   method: "POST",
