@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/public/auth.css" />
+    <title>Authenticate</title>
+  </head>
+  <body>
+    <div class="screen-container">
+      <div class="form-container">
+        <h1>Sign In</h1>
+        <form class="form" id="form">
+          <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            id="cur-username"
+            class="form-element"
+            autocomplete="username"
+          />
+          <input
+            type="text"
+            name="password"
+            placeholder="Password"
+            id="cur-password"
+            class="form-element"
+            autocomplete="current-password"
+          />
+          <input
+            type="button"
+            value="Sign In"
+            class="form-element"
+            id="submit"
+          />
+          <p>Don't have an account yet? <a href="/password">Create One</a></p>
+        </form>
+      </div>
+    </div>
+
+    <script src="/public/auth.js"></script>
+  </body>
+</html>
