@@ -1,9 +1,11 @@
 import express from "express";
 import { DatabaseSync } from "node:sqlite";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
+import crypto, { sign } from "crypto";
 import path from "path";
+import fs from "fs";
 import cookieParser from "cookie-parser";
+import { stat } from "fs";
 const app = express();
 
 const db = new DatabaseSync(path.join(import.meta.dirname, "../data.db"));
@@ -117,6 +119,8 @@ app.post("/login", (req, res) => {
             code: -1,
           })
         );
+
+        return;
       }
 
       if (userData != undefined) {
@@ -147,6 +151,8 @@ app.post("/login", (req, res) => {
                 code: -1,
               })
             );
+
+            return;
           }
         });
       }
@@ -160,7 +166,7 @@ app.post("/create-account", (req, res) => {
   const getUser = db.prepare(`SELECT * FROM logins WHERE username = ?`);
 
   const addUser = db.prepare(
-    `INSERT INTO logins (username, password, activated) VALUES (?, ?, ?)`
+    `INSERT INTO logins (username, password) VALUES (?, ?)`
   );
 
   fetch("http://192.168.0.179:4000/playerlist", {
@@ -177,6 +183,8 @@ app.post("/create-account", (req, res) => {
             code: -1,
           })
         );
+
+        return;
       }
 
       const userData = getUser.get(username);
@@ -192,9 +200,16 @@ app.post("/create-account", (req, res) => {
         return;
       }
 
-      bcrypt.hash(password, 5).then((hash) => {
-        addUser.run(username, hash, 1);
+      bcrypt.hash(password, 10).then((hash) => {
+        addUser.run(username, hash);
       });
+
+      res.send(
+        JSON.stringify({
+          status: "Success",
+          code: 1,
+        })
+      );
     });
 });
 
@@ -213,6 +228,8 @@ function sortSubmissions(subs) {
 
   return cpy;
 }
+
+const getUser = db.prepare("SELECT * FROM logins WHERE username = ?");
 
 app.post("/submit", (req, res) => {
   const motd = req.body.MOTD;
@@ -236,7 +253,8 @@ app.post("/submit", (req, res) => {
   if (copyMOTDs.length != 0) {
     res.send(
       JSON.stringify({
-        isTaken: true,
+        status: "That MOTD already exists.",
+        code: -1,
       })
     );
 
@@ -246,7 +264,21 @@ app.post("/submit", (req, res) => {
   if (sessionTokens[sessionID] == undefined) {
     res.send(
       JSON.stringify({
-        loggedOut: true,
+        status: "You are logged out. Please log back in.",
+        code: -1,
+      })
+    );
+
+    return;
+  }
+
+  const user = getUser.get(sessionTokens[sessionID]);
+
+  if (user.activated == 0) {
+    res.send(
+      JSON.stringify({
+        status: "Your account has not been activated. Please talk to Nolan.",
+        code: -1,
       })
     );
 
@@ -257,14 +289,14 @@ app.post("/submit", (req, res) => {
   if (motdsFromUser.length != 0) {
     res.send(
       JSON.stringify({
-        hasSubmitted: true,
+        status: "You have already submitted an MOTD today!",
+        code: -1,
       })
     );
 
     return;
   }
 
-  console.log(sessionTokens[sessionID]);
   insertMOTD.run(motd, sessionTokens[sessionID], 0);
 });
 
@@ -285,7 +317,8 @@ app.post("/vote", (req, res) => {
   if (sessionID == undefined) {
     res.send(
       JSON.stringify({
-        signedOut: true,
+        status: "You are not signed in pookie.",
+        code: -1,
       })
     );
 
@@ -295,7 +328,24 @@ app.post("/vote", (req, res) => {
   if (sessionTokens[sessionID] == undefined) {
     res.send(
       JSON.stringify({
-        expired: true,
+        status:
+          "Your session has expired there. You're gonna have to sign in again.",
+        code: -1,
+      })
+    );
+
+    return;
+  }
+
+  const user = getUser.get(sessionTokens[sessionID]);
+  console.log(user, "is the user.");
+
+  if (user.activated == 0) {
+    res.send(
+      JSON.stringify({
+        status:
+          "grrrr your account hasn't been activated yet. Talk to Nolan to get it activated.",
+        code: -1,
       })
     );
 
@@ -307,7 +357,8 @@ app.post("/vote", (req, res) => {
   if (hasVoted == 1) {
     res.send(
       JSON.stringify({
-        hasVoted: true,
+        status: "You have already voted pookie!!!1!",
+        code: -1,
       })
     );
 
@@ -322,9 +373,112 @@ app.post("/vote", (req, res) => {
 
   res.send(
     JSON.stringify({
+      status: "Success",
+      code: 1,
       votes: votes + 1,
     })
   );
 });
 
-app.post("/reset", (req, res) => {});
+// const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
+//   modulusLength: 2048,
+//   publicKeyEncoding: {
+//     type: "spki",
+//     format: "pem",
+//   },
+//   privateKeyEncoding: {
+//     type: "pkcs8",
+//     format: "pem",
+//   },
+// });
+
+// fs.writeFileSync(import.meta.dirname + "/../keys/public.key", publicKey);
+// fs.writeFileSync(import.meta.dirname + "/../keys/private.key", privateKey);
+
+const activatePublicKey = fs.readFileSync(
+  import.meta.dirname + "/../keys/activate.pub"
+);
+const resetPublicKey = fs.readFileSync(
+  import.meta.dirname + "/../keys/reset.pub"
+);
+// const privateKey = fs.readFileSync(
+//   import.meta.dirname + "/../keys/private.key"
+// );
+
+// const randomBytes = crypto.randomBytes(512);
+// const signedValue = crypto.sign("SHA256", randomBytes, privateKey);
+
+// const verify = crypto.verify("SHA256", randomBytes, publicKey, signedValue);
+// console.log(verify);
+
+let random = null;
+
+app.get("/random", (req, res) => {
+  random = crypto.randomBytes(512);
+
+  res.send(
+    JSON.stringify({
+      value: random,
+    })
+  );
+});
+
+app.post("/activate", (req, res) => {
+  const activateUser = db.prepare(
+    "UPDATE logins SET activated = 1 WHERE username = ?"
+  );
+
+  const username = req.body.username;
+  const signedBytes = new Uint8Array(req.body.sign.data);
+
+  if (!crypto.verify("SHA256", random, activatePublicKey, signedBytes)) {
+    res.send(
+      JSON.stringify({
+        status: "Could not verify signature.",
+        code: -1,
+      })
+    );
+
+    console.log("Could not verify signature.");
+
+    return;
+  }
+
+  if (username == undefined) {
+    res.send(
+      JSON.stringify({
+        status: "User not found in body of request.",
+        code: -1,
+      })
+    );
+
+    return;
+  }
+
+  activateUser.run(username);
+
+  res.send(
+    JSON.stringify({
+      status: "Success",
+      code: 1,
+    })
+  );
+});
+
+app.post("/reset", (req, res) => {
+  const signedBytes = new Uint8Array(req.body.sign.data);
+
+  if (!crypto.verify("SHA256", random, resetPublicKey, signedBytes)) {
+    res.send(
+      JSON.stringify({
+        status: "Could not verify signature.",
+        code: -1,
+      })
+    );
+
+    return;
+  }
+
+  const resetMOTD = db.prepare("DELETE FROM motds WHERE id > -1");
+  resetMOTD.run();
+});

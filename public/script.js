@@ -29,15 +29,11 @@ send.addEventListener("click", () => {
       return res.json();
     })
     .then((data) => {
-      if (data.isTaken) {
-        alert("YOU ARE STUPID THAT's ALREADY TAKEN");
-        return true;
-      } else if (data.loggedOut) {
-        alert("You gotta sign in before you create a message pookie.");
-        return;
-      } else if (data.hasSubmitted) {
-        alert("Hey there, you can only submit one votable thing per day");
+      if (data.code == -1) {
+        alert(data.status);
         return;
       }
+
+      window.location.replace("/");
     });
 });

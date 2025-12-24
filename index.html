@@ -83,8 +83,6 @@
               // </div>`;
 
               voteButton.addEventListener("click", () => {
-                console.log("Test");
-
                 let date = new Date();
                 fetch("/vote", {
                   method: "POST",
@@ -99,22 +97,8 @@
                     return res.json();
                   })
                   .then((data) => {
-                    if (data.hasVoted) {
-                      alert(
-                        "Nice try you tricky sigma, but you can't vote twice in one day!!!1!"
-                      );
-                      return;
-                    }
-
-                    if (data.signedOut) {
-                      alert("You must be signed in to vote.");
-                      return;
-                    }
-
-                    if (data.expired) {
-                      alert(
-                        "It looks like your session token has expired. Please sign in again."
-                      );
+                    if (data.code == -1) {
+                      alert(data.status);
                       return;
                     }
                     voteCountText.data = "Vote count: " + data.votes;
